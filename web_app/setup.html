@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家务零花钱打卡 - 配置向导</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .container { max-width: 600px; width: 90%; background: white; border-radius: 16px; padding: 32px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+        h1 { font-size: 24px; margin-bottom: 8px; color: #333; }
+        .subtitle { color: #666; margin-bottom: 24px; }
+        .step { margin-bottom: 24px; padding: 16px; background: #f5f5f5; border-radius: 8px; }
+        .step-number { display: inline-block; width: 28px; height: 28px; background: #2196F3; color: white; border-radius: 50%; text-align: center; line-height: 28px; margin-right: 8px; font-weight: bold; }
+        .step-title { font-weight: 600; margin-bottom: 8px; }
+        .step-content { font-size: 14px; color: #666; line-height: 1.6; }
+        .step-content a { color: #2196F3; }
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; font-size: 14px; color: #333; margin-bottom: 4px; font-weight: 600; }
+        .input-group input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        .btn-primary { background: linear-gradient(135deg, #2196F3, #1976D2); color: white; }
+        .btn-success { background: linear-gradient(135deg, #4CAF50, #388E3C); color: white; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .code-block { background: #f5f5f5; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 12px; margin: 8px 0; overflow-x: auto; white-space: pre-wrap; }
+        .alert { padding: 12px; border-radius: 8px; margin: 12px 0; font-size: 14px; }
+        .alert-info { background: #E3F2FD; color: #1976D2; }
+        .alert-success { background: #E8F5E9; color: #2E7D32; }
+        .alert-warning { background: #FFF3E0; color: #E65100; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 家务零花钱打卡</h1>
+        <p class="subtitle">云端同步配置向导</p>
+        
+        <div class="step">
+            <div class="step-title"><span class="step-number">1</span>访问 Supabase</div>
+            <div class="step-content">
+                访问 <a href="https://supabase.com/dashboard" target="_blank">Supabase Dashboard</a>
+                注册或登录账号（支持 GitHub 登录）
+            </div>
+        </div>
+        
+        <div class="step">
+            <div class="step-title"><span class="step-number">2</span>创建项目</div>
+            <div class="step-content">
+                点击 <strong>"New Project"</strong><br><br>
+                <div class="input-group">
+                    <label>项目名称</label>
+                    <input type="text" value="chore-reward" id="projectName" readonly>
+                </div>
+                <div class="input-group">
+                    <label>数据库密码</label>
+                    <input type="text" value="" id="dbPassword" placeholder="设置一个强密码">
+                </div>
+                <div class="input-group">
+                    <label>区域</label>
+                    <select id="region" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;">
+                        <option value="southeastasia">Southeast Asia (Singapore)</option>
+                        <option value="eastus">East US (Virginia)</option>
+                        <option value="westeurope">West Europe (Netherlands)</option>
+                    </select>
+                </div>
+                <p style="margin-top:8px;font-size:12px;color:#999;">⏱️ 创建项目需要 1-2 分钟</p>
+            </div>
+        </div>
+        
+        <div class="step">
+            <div class="step-title"><span class="step-number">3</span>创建数据表</div>
+            <div class="step-content">
+                项目创建完成后，进入 <strong>SQL Editor</strong><br>
+                复制以下代码并执行：
+                <div class="code-block">CREATE TABLE IF NOT EXISTS chore_data (
+    id INTEGER PRIMARY KEY DEFAULT 1,
+    data JSONB NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE chore_data ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read" ON chore_data
+    FOR SELECT USING (true);
+
+CREATE POLICY "Allow public update" ON chore_data
+    FOR ALL USING (true);
+
+INSERT INTO chore_data (id, data)
+VALUES (1, '{"profile":{"name":"小朋友","class":"","password":"123456"},"checks":{},"approvals":[]}')
+ON CONFLICT (id) DO NOTHING;</div>
+            </div>
+        </div>
+        
+        <div class="step">
+            <div class="step-title"><span class="step-number">4</span>获取 API 配置</div>
+            <div class="step-content">
+                进入 <strong>Settings → API</strong><br>
+                复制以下信息：
+                <div class="input-group">
+                    <label>Project URL</label>
+                    <input type="text" id="supabaseUrl" placeholder="例如：https://xxxxx.supabase.co">
+                </div>
+                <div class="input-group">
+                    <label>Anon/Public Key</label>
+                    <input type="text" id="supabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+                </div>
+            </div>
+        </div>
+        
+        <div class="step">
+            <div class="step-title"><span class="step-number">5</span>完成配置</div>
+            <div class="step-content">
+                点击下面的按钮，自动配置应用：
+                <button class="btn btn-primary" style="margin-top:12px;" onclick="applyConfig()">✅ 应用配置</button>
+            </div>
+        </div>
+        
+        <div id="successAlert" class="alert alert-success hidden">
+            ✅ 配置成功！正在跳转到应用...
+        </div>
+        
+        <div id="errorAlert" class="alert alert-warning hidden">
+            ⚠️ 配置失败，请检查输入是否正确
+        </div>
+    </div>
+    
+    <script>
+        function applyConfig() {
+            const url = document.getElementById('supabaseUrl').value;
+            const key = document.getElementById('supabaseKey').value;
+            
+            if (!url || !key) {
+                document.getElementById('errorAlert').classList.remove('hidden');
+                return;
+            }
+            
+            // 保存到 localStorage
+            localStorage.setItem('supabaseUrl', url);
+            localStorage.setItem('supabaseKey', key);
+            
+            // 显示成功消息
+            document.getElementById('successAlert').classList.remove('hidden');
+            
+            // 延迟跳转
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1500);
+        }
+        
+        // 检查是否已有配置
+        window.onload = function() {
+            const savedUrl = localStorage.getItem('supabaseUrl');
+            const savedKey = localStorage.getItem('supabaseKey');
+            
+            if (savedUrl && savedKey) {
+                document.getElementById('supabaseUrl').value = savedUrl;
+                document.getElementById('supabaseKey').value = savedKey;
+                document.getElementById('successAlert').textContent = '✅ 已检测到已有配置，可直接使用';
+                document.getElementById('successAlert').classList.remove('hidden');
+            }
+        };
+    </script>
+</body>
+</html>

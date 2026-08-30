@@ -43,6 +43,7 @@
         .btn-primary { background: linear-gradient(135deg, #2196F3, #1976D2); color: white; }
         .btn-success { background: linear-gradient(135deg, #4CAF50, #388E3C); color: white; }
         .btn-danger { background: linear-gradient(135deg, #f44336, #d32f2f); color: white; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .approval-item { background: white; border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
         .approval-item.pending { background: #FFF3E0; }
         .approval-info { flex: 1; }
@@ -75,8 +76,6 @@
         .loading { display: flex; align-items: center; justify-content: center; padding: 20px; }
         .spinner { width: 24px; height: 24px; border: 3px solid #f3f3f3; border-top: 3px solid #2196F3; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .setup-link { text-align: center; margin-top: 12px; }
-        .setup-link a { color: #2196F3; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -92,10 +91,7 @@
         </div>
         
         <div id="childPage" class="page active">
-            <div class="device-info" id="syncStatus">🔄 正在连接云端...</div>
-            <div class="setup-link" id="setupLink" style="display:none;">
-                <a href="setup.html">⚙️ 配置云端同步</a>
-            </div>
+            <div class="device-info" id="syncStatus">🔄 正在同步数据...</div>
             
             <div class="stats-row">
                 <div class="stat-card">
@@ -191,9 +187,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <script>
-        // 从 localStorage 获取配置
-        const SUPABASE_URL = localStorage.getItem('supabaseUrl') || '';
-        const SUPABASE_ANON_KEY = localStorage.getItem('supabaseKey') || '';
+        // Supabase 配置 - 请替换为你的项目配置
+        const SUPABASE_URL = 'https://your-project.supabase.co';
+        const SUPABASE_ANON_KEY = 'your-anon-key';
         
         // 任务配置
         const TASKS = [
@@ -235,48 +231,41 @@
         let data = { profile: { name: '小朋友', class: '', password: '123456' }, checks: {}, approvals: [] };
         let isParentLoggedIn = false;
         let supabase = null;
-        let useCloud = false;
         
         // 初始化
         async function init() {
             updateDate();
             initMonthSelectors();
             
-            // 检查是否有配置
-            if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-                try {
-                    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                    await loadFromCloud();
-                    useCloud = true;
-                    updateSyncStatus(true, '☁️ 数据已同步到云端');
-                } catch (error) {
-                    console.error('云端连接失败:', error);
-                    updateSyncStatus(false, '❌ 云端连接失败，使用本地模式');
-                    loadData();
-                    document.getElementById('setupLink').style.display = 'block';
-                }
-            } else {
+            // 初始化 Supabase
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                await loadFromCloud();
+                renderTasks();
+                updateStats();
+                checkParentLogin();
+                loadHistory();
+                updateSyncStatus(true);
+            } catch (error) {
+                console.error('初始化失败:', error);
+                updateSyncStatus(false, '云端连接失败，使用本地模式');
                 loadData();
-                updateSyncStatus(false, '💾 本地存储模式');
-                document.getElementById('setupLink').style.display = 'block';
+                renderTasks();
+                updateStats();
             }
-            
-            renderTasks();
-            updateStats();
-            checkParentLogin();
-            loadHistory();
         }
         
         // 更新同步状态
         function updateSyncStatus(success, message) {
             const statusEl = document.getElementById('syncStatus');
-            statusEl.textContent = message;
             if (success) {
+                statusEl.textContent = '☁️ 数据已同步到云端';
                 statusEl.style.background = '#E8F5E9';
                 statusEl.style.color = '#2E7D32';
             } else {
-                statusEl.style.background = '#FFF3E0';
-                statusEl.style.color = '#E65100';
+                statusEl.textContent = message || '❌ 同步失败';
+                statusEl.style.background = '#FFEBEE';
+                statusEl.style.color = '#C62828';
             }
         }
         
@@ -285,7 +274,7 @@
             const response = await supabase.from('chore_data').select('*').single();
             if (response.data) {
                 data = response.data.data;
-                saveData();
+                saveData(); // 保存到本地缓存
             }
         }
         
@@ -297,6 +286,7 @@
                 updated_at: new Date().toISOString()
             });
             if (error) throw error;
+            updateSyncStatus(true);
         }
         
         // 加载本地数据
@@ -359,12 +349,10 @@
             addApproval(taskName, amount, today);
             
             // 同步到云端
-            if (useCloud) {
-                try {
-                    await saveToCloud();
-                } catch (error) {
-                    console.error('同步失败:', error);
-                }
+            try {
+                await saveToCloud();
+            } catch (error) {
+                console.error('同步失败:', error);
             }
         }
         
@@ -501,17 +489,15 @@
             if (approval) {
                 approval.status = 'approved';
                 saveData();
-                if (useCloud) {
-                    try { await saveToCloud(); } catch (error) { console.error('同步失败:', error); }
-                }
+                try { await saveToCloud(); } catch (error) { console.error('同步失败:', error); }
                 renderParentPanel();
             }
         }
         
         function showSettings() { document.getElementById('childName').value = data.profile.name; document.getElementById('childClass').value = data.profile.class; document.getElementById('settingsModal').classList.add('show'); }
-        async function saveSettings() { data.profile.name = document.getElementById('childName').value || '小朋友'; data.profile.class = document.getElementById('childClass').value; saveData(); if (useCloud) { try { await saveToCloud(); } catch (error) { console.error('同步失败:', error); } } closeModal(); renderParentPanel(); }
+        async function saveSettings() { data.profile.name = document.getElementById('childName').value || '小朋友'; data.profile.class = document.getElementById('childClass').value; saveData(); try { await saveToCloud(); } catch (error) { console.error('同步失败:', error); } closeModal(); renderParentPanel(); }
         function changePassword() { document.getElementById('passwordModal').classList.add('show'); }
-        async function savePassword() { const newPwd = document.getElementById('newPassword').value; const confirmPwd = document.getElementById('confirmPassword').value; if (!newPwd) { alert('请输入新密码'); return; } if (newPwd !== confirmPwd) { alert('两次密码不一致'); return; } data.profile.password = newPwd; saveData(); if (useCloud) { try { await saveToCloud(); } catch (error) { console.error('同步失败:', error); } } closeModal(); alert('密码已修改'); }
+        async function savePassword() { const newPwd = document.getElementById('newPassword').value; const confirmPwd = document.getElementById('confirmPassword').value; if (!newPwd) { alert('请输入新密码'); return; } if (newPwd !== confirmPwd) { alert('两次密码不一致'); return; } data.profile.password = newPwd; saveData(); try { await saveToCloud(); } catch (error) { console.error('同步失败:', error); } closeModal(); alert('密码已修改'); }
         function closeModal() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); document.getElementById('newPassword').value = ''; document.getElementById('confirmPassword').value = ''; }
         function formatTime(isoString) { const date = new Date(isoString); return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`; }
         
