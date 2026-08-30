@@ -71,10 +71,6 @@
         .month-selector button { padding: 10px 16px; border: none; background: #2196F3; color: white; border-radius: 8px; cursor: pointer; }
         .export-btn { background: #2196F3; color: white; padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; }
         .device-info { background: #E8F5E9; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 13px; color: #2E7D32; }
-        .sync-status { background: #E3F2FD; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 13px; color: #1976D2; }
-        .loading { display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .spinner { width: 24px; height: 24px; border: 3px solid #f3f3f3; border-top: 3px solid #2196F3; border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .setup-link { text-align: center; margin-top: 12px; }
         .setup-link a { color: #2196F3; font-size: 14px; }
     </style>
@@ -92,8 +88,8 @@
         </div>
         
         <div id="childPage" class="page active">
-            <div class="device-info" id="syncStatus">🔄 正在连接云端...</div>
-            <div class="setup-link" id="setupLink" style="display:none;">
+            <div class="device-info" id="syncStatus">💾 本地存储模式</div>
+            <div class="setup-link" id="setupLink">
                 <a href="setup.html">⚙️ 配置云端同步</a>
             </div>
             
@@ -123,7 +119,7 @@
             </div>
             
             <div id="parentPanel" style="display:none;">
-                <div class="device-info">👨 家长模式 | 数据已同步到云端</div>
+                <div class="device-info">👨 家长模式</div>
                 
                 <div class="card">
                     <div class="card-title">👦 孩子信息</div>
@@ -187,14 +183,7 @@
         </div>
     </div>
     
-    <!-- Supabase CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <script>
-        // 从 localStorage 获取配置
-        const SUPABASE_URL = localStorage.getItem('supabaseUrl') || '';
-        const SUPABASE_ANON_KEY = localStorage.getItem('supabaseKey') || '';
-        
         // 任务配置
         const TASKS = [
             { group: '🌅 晨间', tasks: [
@@ -234,78 +223,25 @@
         // 全局数据
         let data = { profile: { name: '小朋友', class: '', password: '123456' }, checks: {}, approvals: [] };
         let isParentLoggedIn = false;
-        let supabase = null;
-        let useCloud = false;
         
         // 初始化
-        async function init() {
+        function init() {
+            loadData();
             updateDate();
-            initMonthSelectors();
-            
-            // 检查是否有配置
-            if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-                try {
-                    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                    await loadFromCloud();
-                    useCloud = true;
-                    updateSyncStatus(true, '☁️ 数据已同步到云端');
-                } catch (error) {
-                    console.error('云端连接失败:', error);
-                    updateSyncStatus(false, '❌ 云端连接失败，使用本地模式');
-                    loadData();
-                    document.getElementById('setupLink').style.display = 'block';
-                }
-            } else {
-                loadData();
-                updateSyncStatus(false, '💾 本地存储模式');
-                document.getElementById('setupLink').style.display = 'block';
-            }
-            
             renderTasks();
             updateStats();
             checkParentLogin();
+            initMonthSelectors();
             loadHistory();
         }
         
-        // 更新同步状态
-        function updateSyncStatus(success, message) {
-            const statusEl = document.getElementById('syncStatus');
-            statusEl.textContent = message;
-            if (success) {
-                statusEl.style.background = '#E8F5E9';
-                statusEl.style.color = '#2E7D32';
-            } else {
-                statusEl.style.background = '#FFF3E0';
-                statusEl.style.color = '#E65100';
-            }
-        }
-        
-        // 从云端加载数据
-        async function loadFromCloud() {
-            const response = await supabase.from('chore_data').select('*').single();
-            if (response.data) {
-                data = response.data.data;
-                saveData();
-            }
-        }
-        
-        // 保存到云端
-        async function saveToCloud() {
-            const { error } = await supabase.from('chore_data').upsert({
-                id: 1,
-                data: data,
-                updated_at: new Date().toISOString()
-            });
-            if (error) throw error;
-        }
-        
-        // 加载本地数据
+        // 加载数据
         function loadData() {
             const saved = localStorage.getItem('choreData');
             if (saved) data = JSON.parse(saved);
         }
         
-        // 保存本地数据
+        // 保存数据
         function saveData() {
             localStorage.setItem('choreData', JSON.stringify(data));
         }
@@ -348,7 +284,7 @@
             }).join('');
         }
         
-        async function toggleTask(taskId, taskName, amount) {
+        function toggleTask(taskId, taskName, amount) {
             const today = getTodayKey();
             if (data.checks[taskId] === today) delete data.checks[taskId];
             else data.checks[taskId] = today;
@@ -357,15 +293,6 @@
             renderTasks();
             updateStats();
             addApproval(taskName, amount, today);
-            
-            // 同步到云端
-            if (useCloud) {
-                try {
-                    await saveToCloud();
-                } catch (error) {
-                    console.error('同步失败:', error);
-                }
-            }
         }
         
         function addApproval(taskName, amount, date) {
@@ -496,22 +423,19 @@
             document.getElementById('monthStats').innerHTML = `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;"><span>本月累计收入</span><span style="font-weight:600;color:#4CAF50;">¥${totalAmount.toFixed(1)}</span></div><div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;"><span>已审核金额</span><span style="font-weight:600;color:#2196F3;">¥${approvedAmount.toFixed(1)}</span></div><div style="display:flex;justify-content:space-between;padding:8px 0;"><span>审核记录数</span><span style="font-weight:600;">${monthApprovals.length}条</span></div>`;
         }
         
-        async function approveTask(id) {
+        function approveTask(id) {
             const approval = data.approvals.find(a => a.id === id);
             if (approval) {
                 approval.status = 'approved';
                 saveData();
-                if (useCloud) {
-                    try { await saveToCloud(); } catch (error) { console.error('同步失败:', error); }
-                }
                 renderParentPanel();
             }
         }
         
         function showSettings() { document.getElementById('childName').value = data.profile.name; document.getElementById('childClass').value = data.profile.class; document.getElementById('settingsModal').classList.add('show'); }
-        async function saveSettings() { data.profile.name = document.getElementById('childName').value || '小朋友'; data.profile.class = document.getElementById('childClass').value; saveData(); if (useCloud) { try { await saveToCloud(); } catch (error) { console.error('同步失败:', error); } } closeModal(); renderParentPanel(); }
+        function saveSettings() { data.profile.name = document.getElementById('childName').value || '小朋友'; data.profile.class = document.getElementById('childClass').value; saveData(); closeModal(); renderParentPanel(); }
         function changePassword() { document.getElementById('passwordModal').classList.add('show'); }
-        async function savePassword() { const newPwd = document.getElementById('newPassword').value; const confirmPwd = document.getElementById('confirmPassword').value; if (!newPwd) { alert('请输入新密码'); return; } if (newPwd !== confirmPwd) { alert('两次密码不一致'); return; } data.profile.password = newPwd; saveData(); if (useCloud) { try { await saveToCloud(); } catch (error) { console.error('同步失败:', error); } } closeModal(); alert('密码已修改'); }
+        function savePassword() { const newPwd = document.getElementById('newPassword').value; const confirmPwd = document.getElementById('confirmPassword').value; if (!newPwd) { alert('请输入新密码'); return; } if (newPwd !== confirmPwd) { alert('两次密码不一致'); return; } data.profile.password = newPwd; saveData(); closeModal(); alert('密码已修改'); }
         function closeModal() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); document.getElementById('newPassword').value = ''; document.getElementById('confirmPassword').value = ''; }
         function formatTime(isoString) { const date = new Date(isoString); return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`; }
         
