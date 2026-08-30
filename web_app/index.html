@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>家务零花钱打卡 - 云端版</title>
+    <title>家务零花钱打卡</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
@@ -183,9 +183,6 @@
         </div>
     </div>
     
-    <!-- Supabase CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <script>
         // 任务配置
         const TASKS = [
@@ -233,8 +230,18 @@
         function init() {
             updateDate();
             initMonthSelectors();
+            loadData();
+            renderTasks();
+            updateStats();
+            checkParentLogin();
+            loadHistory();
             
-            // 从 localStorage 读取配置
+            // 检查是否有云端配置
+            checkCloudConfig();
+        }
+        
+        // 检查云端配置
+        function checkCloudConfig() {
             const savedUrl = localStorage.getItem('supabaseUrl');
             const savedKey = localStorage.getItem('supabaseKey');
             
@@ -247,21 +254,15 @@
                     }).catch(err => {
                         console.error('云端加载失败:', err);
                         updateSyncStatus(false, '❌ 云端连接失败，使用本地模式');
-                        loadData();
+                        saveData();
                     });
                 } catch (e) {
                     console.error('初始化失败:', e);
-                    loadData();
+                    updateSyncStatus(false, '💾 本地存储模式');
                 }
             } else {
-                loadData();
                 updateSyncStatus(false, '💾 本地存储模式');
             }
-            
-            renderTasks();
-            updateStats();
-            checkParentLogin();
-            loadHistory();
         }
         
         // 更新同步状态
@@ -363,6 +364,8 @@
             const container = document.getElementById('taskList');
             const today = getTodayKey();
             const isWeekend = new Date().getDay() === 0 || new Date().getDay() === 6;
+            
+            if (!container) return;
             
             container.innerHTML = TASKS.map(group => {
                 const tasksHtml = group.tasks.map(task => {
