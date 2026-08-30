@@ -1,0 +1,21 @@
+# Flutter and Dart
+*.dart_tool/
+*.packages
+*.generate.dart
+.DartDevelopmentService
+.dart_tool/
+.packages
+/build/
+/pubspec.lock
+.pub-cache/
+.pub/
+/.flutter-plugins
+/.flutter-plugins-dependencies
+/.packages
+*.iml
+.idea/
+*.log
+.DS_Store
+*.class
+**/flutter_assets/
+**/.flutter_plugin_registrant.dart

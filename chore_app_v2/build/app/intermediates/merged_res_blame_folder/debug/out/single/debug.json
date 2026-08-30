@@ -1,0 +1,54 @@
+[
+    {
+        "merged": "com.example.choreapp-merged_res-6:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "com.example.choreapp-main-1:/mipmap-xxxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.choreapp-merged_res-6:/mipmap-xhdpi_ic_launcher_round.png.flat",
+        "source": "com.example.choreapp-main-1:/mipmap-xhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.example.choreapp-merged_res-6:/mipmap-ldpi_ic_launcher_round.png.flat",
+        "source": "com.example.choreapp-main-1:/mipmap-ldpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "C:\\Users\\Administrator\\.gradle\\daemon\\8.5\\com.example.choreapp-merged_res-6:\\layout_activity_main.xml.flat",
+        "source": "C:\\Users\\Administrator\\.gradle\\daemon\\8.5\\com.example.choreapp-main-1:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "com.example.choreapp-merged_res-6:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "com.example.choreapp-main-1:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.choreapp-merged_res-6:/mipmap-hdpi_ic_launcher_round.png.flat",
+        "source": "com.example.choreapp-main-1:/mipmap-hdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.example.choreapp-merged_res-6:/mipmap-ldpi_ic_launcher.png.flat",
+        "source": "com.example.choreapp-main-1:/mipmap-ldpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.choreapp-merged_res-6:/mipmap-xxhdpi_ic_launcher_round.png.flat",
+        "source": "com.example.choreapp-main-1:/mipmap-xxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.example.choreapp-merged_res-6:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "com.example.choreapp-main-1:/mipmap-mdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.choreapp-merged_res-6:/mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "com.example.choreapp-main-1:/mipmap-xxxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.example.choreapp-merged_res-6:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "com.example.choreapp-main-1:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.choreapp-merged_res-6:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "com.example.choreapp-main-1:/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.choreapp-merged_res-6:/mipmap-mdpi_ic_launcher_round.png.flat",
+        "source": "com.example.choreapp-main-1:/mipmap-mdpi/ic_launcher_round.png"
+    }
+]

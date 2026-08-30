@@ -1,0 +1,7 @@
+#Sun Aug 16 15:07:45 CST 2026
+base.1=C\:\\Users\\Administrator\\.qoderworkcn\\workspace\\mrmv15mnxp6whu24\\outputs\\chore_app_v2\\build\\app\\intermediates\\dex\\debug\\mergeProjectDexDebug\\10\\classes.dex
+path.1=10/classes.dex
+base.0=C\:\\Users\\Administrator\\.qoderworkcn\\workspace\\mrmv15mnxp6whu24\\outputs\\chore_app_v2\\build\\app\\intermediates\\dex\\debug\\mergeProjectDexDebug\\0\\classes.dex
+renamed.1=classes2.dex
+renamed.0=classes.dex
+path.0=0/classes.dex

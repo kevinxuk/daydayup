@@ -1,0 +1,1 @@
+C:\Users\Administrator\.qoderworkcn\workspace\mrmv15mnxp6whu24\outputs\chore_app_v2\build\app\intermediates\merged_res\debug\layout_activity_main.xml.flat C:\Users\Administrator\.qoderworkcn\workspace\mrmv15mnxp6whu24\outputs\chore_app_v2\build\app\intermediates\merged_res\debug\values_values.arsc.flat 

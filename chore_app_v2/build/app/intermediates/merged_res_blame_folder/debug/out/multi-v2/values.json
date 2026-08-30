@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.example.choreapp-mergeDebugResources-4:/values/values.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\Administrator\\.qoderworkcn\\workspace\\mrmv15mnxp6whu24\\outputs\\chore_app_v2\\android\\app\\src\\main\\res\\values\\strings.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "44",
+                        "endOffsets": "95"
+                    }
+                }
+            ]
+        }
+    ]
+}
