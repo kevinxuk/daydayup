@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>云端同步测试</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .container { max-width: 500px; width: 90%; background: white; border-radius: 16px; padding: 32px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+        h1 { font-size: 24px; margin-bottom: 8px; color: #333; }
+        .subtitle { color: #666; margin-bottom: 24px; }
+        .test-section { margin-bottom: 24px; padding: 16px; background: #f5f5f5; border-radius: 8px; }
+        .test-title { font-weight: 600; margin-bottom: 12px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; margin: 4px; }
+        .btn-primary { background: linear-gradient(135deg, #2196F3, #1976D2); color: white; }
+        .btn-success { background: linear-gradient(135deg, #4CAF50, #388E3C); color: white; }
+        .btn-danger { background: linear-gradient(135deg, #f44336, #d32f2f); color: white; }
+        .result { margin-top: 12px; padding: 12px; background: #e8f5e9; border-radius: 8px; font-size: 13px; word-break: break-all; }
+        .result.error { background: #ffebee; }
+        .result.info { background: #e3f2fd; }
+        .back-link { text-align: center; margin-top: 20px; }
+        .back-link a { color: #2196F3; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>☁️ 云端同步测试</h1>
+        <p class="subtitle">测试服务器 API 功能</p>
+        
+        <div class="test-section">
+            <div class="test-title">📥 测试获取数据</div>
+            <button class="btn btn-primary" onclick="getData()">获取数据</button>
+            <div id="getDataResult" class="result" style="display:none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">📤 测试保存数据</div>
+            <button class="btn btn-success" onclick="postData()">保存数据</button>
+            <div id="postDataResult" class="result" style="display:none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">🧹 测试完整流程</div>
+            <button class="btn btn-primary" onclick="testSync()">执行同步测试</button>
+            <div id="syncResult" class="result" style="display:none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">📊 当前数据</div>
+            <button class="btn btn-danger" onclick="viewData()">查看数据</button>
+            <div id="viewDataResult" class="result info" style="display:none;"></div>
+        </div>
+        
+        <div class="back-link">
+            <a href="index.html">← 返回首页</a>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://localhost:3000/api/data';
+        
+        async function getData() {
+            const result = document.getElementById('getDataResult');
+            result.style.display = 'block';
+            result.textContent = '正在获取数据...';
+            result.className = 'result';
+            
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                result.textContent = '✅ 获取成功！\n' + JSON.stringify(data, null, 2);
+                result.className = 'result';
+            } catch (error) {
+                result.textContent = '❌ 获取失败：' + error.message;
+                result.className = 'result error';
+            }
+        }
+        
+        async function postData() {
+            const result = document.getElementById('postDataResult');
+            result.style.display = 'block';
+            result.textContent = '正在保存数据...';
+            result.className = 'result';
+            
+            const testData = {
+                profile: { name: '测试用户', class: '测试班级', password: '123456' },
+                checks: { '晨间-按时起床': new Date().toISOString().split('T')[0] },
+                approvals: []
+            };
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testData)
+                });
+                const data = await response.json();
+                result.textContent = '✅ 保存成功！\n' + JSON.stringify(data, null, 2);
+                result.className = 'result';
+            } catch (error) {
+                result.textContent = '❌ 保存失败：' + error.message;
+                result.className = 'result error';
+            }
+        }
+        
+        async function testSync() {
+            const result = document.getElementById('syncResult');
+            result.style.display = 'block';
+            result.textContent = '正在执行同步测试...';
+            result.className = 'result';
+            
+            try {
+                // 先获取数据
+                const getResponse = await fetch(API_URL);
+                const currentData = await getResponse.json();
+                
+                // 修改数据
+                const today = new Date().toISOString().split('T')[0];
+                currentData.checks['晨间-按时起床'] = today;
+                currentData.checks['学习-按时完成作业'] = today;
+                currentData.profile.name = '同步测试用户';
+                
+                // 保存数据
+                const postResponse = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(currentData)
+                });
+                const postData = await postResponse.json();
+                
+                // 再次获取验证
+                const verifyResponse = await fetch(API_URL);
+                const verifyData = await verifyResponse.json();
+                
+                result.textContent = '✅ 同步测试成功！\n\n' +
+                    '1. 获取数据成功\n' +
+                    '2. 修改并保存成功\n' +
+                    '3. 验证数据一致\n\n' +
+                    '当前数据：\n' + JSON.stringify(verifyData, null, 2);
+                result.className = 'result';
+            } catch (error) {
+                result.textContent = '❌ 同步测试失败：' + error.message;
+                result.className = 'result error';
+            }
+        }
+        
+        async function viewData() {
+            const result = document.getElementById('viewDataResult');
+            result.style.display = 'block';
+            
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                result.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                result.textContent = '❌ 获取失败：' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

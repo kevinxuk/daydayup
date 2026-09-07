@@ -1,108 +1,75 @@
-// 家务零花钱打卡 - 云端同步服务器
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // 中间件
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'web_app')));
 
-// 数据存储目录
-const DATA_DIR = path.join(__dirname, 'data');
-if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+// 数据存储文件
+const DATA_FILE = path.join(__dirname, 'data', 'chore_data.json');
+
+// 确保数据目录存在
+const dataDir = path.join(__dirname, 'data');
+if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
 }
 
-// 获取用户数据文件路径
-function getUserDataPath(deviceId) {
-    return path.join(DATA_DIR, `${deviceId}.json`);
-}
-
-// 读取用户数据
-function readUserData(deviceId) {
-    const filePath = getUserDataPath(deviceId);
-    if (fs.existsSync(filePath)) {
-        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+// 读取数据
+function loadData() {
+    try {
+        if (fs.existsSync(DATA_FILE)) {
+            const data = fs.readFileSync(DATA_FILE, 'utf8');
+            return JSON.parse(data);
+        }
+    } catch (error) {
+        console.error('读取数据失败:', error);
     }
-    return null;
+    return {
+        profile: { name: '小朋友', class: '', password: '123456' },
+        checks: {},
+        approvals: []
+    };
 }
 
-// 保存用户数据
-function saveUserData(deviceId, data) {
-    const filePath = getUserDataPath(deviceId);
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+// 保存数据
+function saveData(data) {
+    try {
+        fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        return true;
+    } catch (error) {
+        console.error('保存数据失败:', error);
+        return false;
+    }
 }
 
-// API: 同步数据
-app.post('/api/sync', (req, res) => {
-    const { deviceId, data } = req.body;
-    
-    if (!deviceId) {
-        return res.status(400).json({ error: 'deviceId 不能为空' });
-    }
-    
-    saveUserData(deviceId, data);
-    res.json({ success: true, message: '数据同步成功' });
-});
+// API 路由
 
-// API: 获取数据
-app.get('/api/sync/:deviceId', (req, res) => {
-    const { deviceId } = req.params;
-    const data = readUserData(deviceId);
-    
-    if (!data) {
-        return res.status(404).json({ error: '未找到数据' });
-    }
-    
+// 获取数据
+app.get('/api/data', (req, res) => {
+    const data = loadData();
     res.json(data);
 });
 
-// API: 创建新用户
-app.post('/api/register', (req, res) => {
-    const { deviceId, data } = req.body;
-    
-    if (!deviceId) {
-        return res.status(400).json({ error: 'deviceId 不能为空' });
-    }
-    
-    // 如果已存在，返回现有数据
-    const existing = readUserData(deviceId);
-    if (existing) {
-        return res.json({ success: true, data: existing, isNew: false });
-    }
-    
-    // 创建新用户
-    const userData = {
-        ...data,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-    };
-    
-    saveUserData(deviceId, userData);
-    res.json({ success: true, data: userData, isNew: true });
-});
-
-// API: 删除数据（家长端）
-app.delete('/api/data/:deviceId', (req, res) => {
-    const { deviceId } = req.params;
-    const filePath = getUserDataPath(deviceId);
-    
-    if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-        res.json({ success: true, message: '数据已清除' });
+// 保存数据
+app.post('/api/data', (req, res) => {
+    const success = saveData(req.body);
+    if (success) {
+        res.json({ success: true, message: '数据已保存' });
     } else {
-        res.status(404).json({ error: '数据不存在' });
+        res.status(500).json({ success: false, message: '保存失败' });
     }
 });
 
-// 启动服务器
+// 服务器已启动
+console.log(`🚀 服务器运行在 http://localhost:${PORT}`);
+console.log(`📁 数据文件: ${DATA_FILE}`);
+
 app.listen(PORT, () => {
-    console.log(`服务器运行在 http://localhost:${PORT}`);
-    console.log(`API 地址: http://localhost:${PORT}/api/sync`);
-    console.log(`数据目录: ${DATA_DIR}`);
+    console.log(`✅ 服务已启动!`);
 });
